@@ -260,7 +260,10 @@ defmodule Bamboo.Phoenix do
   end
 
   defp put_view(email, view_module) do
-    email |> put_private(:view_module, view_module)
+    email
+    |> put_private(:view_module, view_module)
+    # phoenix 1.7 stopped assigning view_module and view_template assigns - this restores pre 1.7 behaviour
+    |> assign(:view_module, view_module)
   end
 
   defp put_template(email, view_template) do
@@ -295,9 +298,7 @@ defmodule Bamboo.Phoenix do
 
       true ->
         raise ArgumentError, """
-        Template name must end in either ".html" or ".text". Template name was #{
-          inspect(template)
-        }
+        Template name must end in either ".html" or ".text". Template name was #{inspect(template)}
 
         If you would like to render both and html and text template,
         use an atom without an extension instead.
@@ -306,7 +307,11 @@ defmodule Bamboo.Phoenix do
   end
 
   defp render_html(email, template) do
+    # Phoenix 1.6 stopped assigning view_module and view_template assigns - this restores pre 1.7 behaviour
+    email = email |> assign(:view_template, template)
+
     # Phoenix uses the assigns.layout to determine what layout to use
+
     assigns = Map.put(email.assigns, :layout, email.private.html_layout)
 
     Phoenix.View.render_to_string(
@@ -317,6 +322,9 @@ defmodule Bamboo.Phoenix do
   end
 
   defp render_text(email, template) do
+    # Phoenix 1.6 stopped assigning view_module and view_template assigns - this restores pre 1.7 behaviour
+    email = email |> assign(:view_template, template)
+
     assigns = Map.put(email.assigns, :layout, email.private.text_layout)
 
     Phoenix.View.render_to_string(
